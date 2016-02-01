@@ -2,153 +2,144 @@
 filedrag.js - HTML5 File Drag & Drop demonstration
 Featured on SitePoint.com
 Developed by Craig Buckler (@craigbuckler) of OptimalWorks.net
+Converted to jQuery (somewhat) by Mike Rodarte - http://github.com/mts7
 */
 (function() {
-
-	// getElementById
-	function $id(id) {
-		return document.getElementById(id);
-	}
-
-
 	// output information
-	function Output(msg) {
-		var m = $id("messages");
-		m.innerHTML = msg + m.innerHTML;
+	function output(msg) {
+		$('#messages').append(msg);
 	}
 
 
 	// file drag hover
-	function FileDragHover(e) {
+	function fileDragHover(e) {
 		e.stopPropagation();
 		e.preventDefault();
-		e.target.className = (e.type == "dragover" ? "hover" : "");
+		e.target.className = (e.type == 'dragover' ? 'hover' : '');
 	}
 
 
 	// file selection
-	function FileSelectHandler(e) {
-
+	function fileSelectHandler(e) {
 		// cancel event and hover styling
-		FileDragHover(e);
+		fileDragHover(e);
 
 		// fetch FileList object
 		var files = e.target.files || e.dataTransfer.files;
 
 		// process all File objects
 		for (var i = 0, f; f = files[i]; i++) {
-			ParseFile(f);
-			UploadFile(f);
+			parseFile(f);
+			uploadFile(f);
 		}
 
 	}
 
 
 	// output file information
-	function ParseFile(file) {
-
-		Output(
-			"<p>File information: <strong>" + file.name +
-			"</strong> type: <strong>" + file.type +
-			"</strong> size: <strong>" + file.size +
-			"</strong> bytes</p>"
+	function parseFile(file) {
+		output(
+			'<p>File information: <strong>' + file.name +
+			'</strong> type: <strong>' + file.type +
+			'</strong> size: <strong>' + file.size +
+			'</strong> bytes</p>'
 		);
 
 		// display an image
-		if (file.type.indexOf("image") == 0) {
-			var reader = new FileReader();
+		var reader = new FileReader();
+
+		if (file.type.indexOf('image') == 0) {
 			reader.onload = function(e) {
-				Output(
-					"<p><strong>" + file.name + ":</strong><br />" +
+				output(
+					'<p><strong>' + file.name + ':</strong><br />' +
 					'<img src="' + e.target.result + '" /></p>'
 				);
-			}
+			};
 			reader.readAsDataURL(file);
 		}
 
 		// display text
-		if (file.type.indexOf("text") == 0) {
-			var reader = new FileReader();
+		if (file.type.indexOf('text') == 0) {
 			reader.onload = function(e) {
-				Output(
-					"<p><strong>" + file.name + ":</strong></p><pre>" +
-					e.target.result.replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-					"</pre>"
+				output(
+					'<p><strong>' + file.name + ':</strong></p><pre>' +
+					e.target.result.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+					'</pre>'
 				);
-			}
+			};
 			reader.readAsText(file);
 		}
 
 	}
 
 
-	// upload JPEG files
-	function UploadFile(file) {
-
-		// following line is not necessary: prevents running on SitePoint servers
-		if (location.host.indexOf("sitepointstatic") >= 0) return
-
+	// upload files
+	function uploadFile(file) {
 		var xhr = new XMLHttpRequest();
-		if (xhr.upload && file.type == "image/jpeg" && file.size <= $id("MAX_FILE_SIZE").value) {
+		if (xhr.upload && validFileType(file.type) && validFileSize(file.size)) {
 
 			// create progress bar
-			var o = $id("progress");
-			var progress = o.appendChild(document.createElement("p"));
-			progress.appendChild(document.createTextNode("upload " + file.name));
+			var o = $('#progress')[0];
+			var progress = o.appendChild(document.createElement('p'));
+			progress.appendChild(document.createTextNode('upload ' + file.name));
 
 
 			// progress bar
-			xhr.upload.addEventListener("progress", function(e) {
+			xhr.upload.addEventListener('progress', function (e) {
 				var pc = parseInt(100 - (e.loaded / e.total * 100));
-				progress.style.backgroundPosition = pc + "% 0";
+				progress.style.backgroundPosition = pc + '% 0';
 			}, false);
 
 			// file received/failed
-			xhr.onreadystatechange = function(e) {
+			xhr.onreadystatechange = function () {
 				if (xhr.readyState == 4) {
-					progress.className = (xhr.status == 200 ? "success" : "failure");
+					progress.className = (xhr.status == 200 ? 'success' : 'failure');
 				}
 			};
 
 			// start upload
-			xhr.open("POST", $id("upload").action, true);
-			xhr.setRequestHeader("X_FILENAME", file.name);
+			xhr.open('POST', $('#upload').prop('action'), true);
+			xhr.setRequestHeader('X-FILENAME', file.name);
 			xhr.send(file);
-
 		}
-
 	}
 
 
 	// initialize
-	function Init() {
-
-		var fileselect = $id("fileselect"),
-			filedrag = $id("filedrag"),
-			submitbutton = $id("submitbutton");
-
+	function init() {
 		// file select
-		fileselect.addEventListener("change", FileSelectHandler, false);
+		$('#fileselect').on('change', fileSelectHandler);
 
 		// is XHR2 available?
 		var xhr = new XMLHttpRequest();
 		if (xhr.upload) {
 
 			// file drop
-			filedrag.addEventListener("dragover", FileDragHover, false);
-			filedrag.addEventListener("dragleave", FileDragHover, false);
-			filedrag.addEventListener("drop", FileSelectHandler, false);
-			filedrag.style.display = "block";
+			$('#filedrag').on({
+				dragover: function(e) {fileDragHover(e.originalEvent);},
+				dragleave: function(e) {fileDragHover(e.originalEvent);},
+				drop: function(e) {fileSelectHandler(e.originalEvent);}
+			}).show();
 
 			// remove submit button
-			submitbutton.style.display = "none";
+			$('#submitbutton').hide();
 		}
 
 	}
 
+
+	function validFileType(type) {
+		return true | type.length;
+	}
+
+
+	function validFileSize(size) {
+		return true | size > 0;
+	}
+
 	// call initialization file
 	if (window.File && window.FileList && window.FileReader) {
-		Init();
+		init();
 	}
 
 
