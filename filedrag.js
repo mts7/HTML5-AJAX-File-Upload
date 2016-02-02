@@ -4,10 +4,20 @@ Featured on SitePoint.com
 Developed by Craig Buckler (@craigbuckler) of OptimalWorks.net
 Converted to jQuery (somewhat) by Mike Rodarte - http://github.com/mts7
 */
+// settings: selectors for various elements
+var selectors = {
+	button: '#submitbutton',
+	dropArea: '#filedrag',
+	form: '#upload',
+	inputFile: '#fileselect',
+	messages: '#messages',
+	progress: '#progress'
+};
+
 (function() {
 	// output information
 	function output(msg) {
-		$('#messages').append(msg);
+		$(selectors.messages).append(msg);
 	}
 
 
@@ -79,7 +89,7 @@ Converted to jQuery (somewhat) by Mike Rodarte - http://github.com/mts7
 		if (xhr.upload && validFileType(file.type) && validFileSize(file.size)) {
 
 			// create progress bar
-			var o = $('#progress')[0];
+			var o = $(selectors.progress)[0];
 			var progress = o.appendChild(document.createElement('p'));
 			progress.appendChild(document.createTextNode('upload ' + file.name));
 
@@ -98,7 +108,7 @@ Converted to jQuery (somewhat) by Mike Rodarte - http://github.com/mts7
 			};
 
 			// start upload
-			xhr.open('POST', $('#upload').prop('action'), true);
+			xhr.open('POST', $(selectors.form).prop('action'), true);
 			xhr.setRequestHeader('X-FILENAME', file.name);
 			xhr.send(file);
 		}
@@ -108,21 +118,21 @@ Converted to jQuery (somewhat) by Mike Rodarte - http://github.com/mts7
 	// initialize
 	function init() {
 		// file select
-		$('#fileselect').on('change', fileSelectHandler);
+		$(selectors.inputFile).on('change', fileSelectHandler);
 
 		// is XHR2 available?
 		var xhr = new XMLHttpRequest();
 		if (xhr.upload) {
 
 			// file drop
-			$('#filedrag').on({
+			$(selectors.dropArea).on({
 				dragover: function(e) {fileDragHover(e.originalEvent);},
 				dragleave: function(e) {fileDragHover(e.originalEvent);},
 				drop: function(e) {fileSelectHandler(e.originalEvent);}
 			}).show();
 
 			// remove submit button
-			$('#submitbutton').hide();
+			$(selectors.button).hide();
 		}
 
 	}
